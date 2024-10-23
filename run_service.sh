@@ -338,56 +338,8 @@ check_for_policy_update() {
 
 # Asks if user wishes to use password-protected key files
 ask_confirm_password() {
-    echo "Use a password?"
-    echo "---------------"
-    echo "You can use a password to encrypt the generated key files. You will be asked for the password each time the script is run."
-    while true; do
-        read -p "Do you want to use a password? (yes/no): " use_password
-        case "$use_password" in
-            [Yy]|[Yy][Ee][Ss])
-                echo "WARNING:"
-                echo "  - Passwords are case-sensitive. Check your Caps Lock before continuing."
-                echo "  - Passwords are not stored on disk."
-                echo "  - If you lose your password, you will lose access to all assets associated to your operator or trader agent keys."
-                echo ""
-                while true; do
-                    read -s -p "Enter your password: " password
-                    echo ""
-
-                    read -s -p "Confirm your password: " confirm_password
-                    echo ""
-
-                    if [ -z "$password" ]; then
-                        echo "Password cannot be blank. Please try again."
-                    elif [[ -n $(echo "-$password-" | awk '{ if(match($0, /[ \t]/)) print "contains_whitespace"; }') ]]; then
-                        echo "Password cannot contain whitespace characters. Please try again."
-                    elif [ ${#password} -lt 4 ]; then
-                        echo "Password must be at least 4 characters long. Please try again."
-                    elif [ "$password" = "$confirm_password" ]; then
-                        use_password=true
-                        password_argument="--password $password"
-                        echo "Password confirmed. Please, store your pasword in a safe place."
-                        read -n 1 -s -r -p "Press any key to continue..."
-                        echo ""
-                        echo ""
-                        return 0
-                    else
-                        echo "Passwords do not match. Please try again."
-                    fi
-                done
-                ;;
-            [Nn]|[Nn][Oo])
-                use_password=false
-                password_argument=""
-                echo ""
-                return 0
-                ;;
-            * )
-                echo "Please enter 'yes' or 'no'."
-                ;;
-        esac
-    done
-    echo ""
+    use_password=false
+    password_argument=""
     return 0
 }
 
