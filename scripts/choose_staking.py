@@ -91,10 +91,25 @@ def _prompt_select_staking_program() -> str:
             program_id = None
 
     if not program_id:
-        # Automatically select choice 5 (quickstart_beta_expert_2)
+        print("Please, select your staking program preference")
+        print("----------------------------------------------")
         ids = list(STAKING_PROGRAMS.keys())
-        choice = 4  # Index 4 corresponds to choice 5
-        program_id = ids[choice]
+        for index, key in enumerate(ids):
+            metadata = _get_staking_contract_metadata(program_id=key)
+            name = metadata["name"]
+            description = metadata["description"]
+            wrapped_description = textwrap.fill(description, width=80, initial_indent='   ', subsequent_indent='   ')
+            print(f"{index + 1}) {name}\n{wrapped_description}\n")
+
+        while True:
+            try:
+                choice = int(input(f"Enter your choice (1 - {len(ids)}): ")) - 1
+                if not (0 <= choice < len(ids)):
+                    raise ValueError
+                program_id = ids[choice]
+                break
+            except ValueError:
+                print(f"Please enter a valid option (1 - {len(ids)}).")
 
     print(f"Selected staking program: {program_id}")
     print("")
@@ -235,7 +250,7 @@ def _get_nevermined_env_variables() -> Dict[str, str]:
     else:
         print("  - No Nevermined subscription set.")
         return {
-            "AGENT_REGII STRY_ADDRESS": "",
+            "AGENT_REGISTRY_ADDRESS": "",
             "MECH_REQUEST_PRICE": ""
         }
 
