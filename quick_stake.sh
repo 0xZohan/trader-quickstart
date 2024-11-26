@@ -55,11 +55,17 @@ else
     exit 1
 fi
 
-# Export necessary environment variables
+# Export only necessary environment variables
 export CUSTOM_CHAIN_RPC="$rpc"
-export CUSTOM_CHAIN_ID=100
+export CUSTOM_CHAIN_ID=100  # Needed for service state check
 export ON_CHAIN_SERVICE_ID="$service_id"
 export ATTENDED=false
+
+# Ensure STAKING_PROGRAM is set in .env file
+if [ -z "${STAKING_PROGRAM}" ]; then
+    echo "STAKING_PROGRAM=quickstart_beta_hobbyist" >> "$env_file_path"
+    export STAKING_PROGRAM=quickstart_beta_hobbyist
+fi
 
 echo "Attempting to stake service $service_id..."
 echo "Using RPC: $rpc"
@@ -70,13 +76,6 @@ echo "CUSTOM_SERVICE_REGISTRY_ADDRESS is $CUSTOM_SERVICE_REGISTRY_ADDRESS"
 echo "CUSTOM_STAKING_ADDRESS is $CUSTOM_STAKING_ADDRESS"
 echo ""
 
-# Ensure STAKING_PROGRAM is set in .env file
-if [ -z "${STAKING_PROGRAM}" ]; then
-    echo "STAKING_PROGRAM='quickstart_beta_hobbyist'" >> "$env_file_path"
-    export STAKING_PROGRAM='quickstart_beta_hobbyist'
-fi
-
-# Change directory to 'trader' before running poetry commands
 cd trader
 
 # Function to retrieve on-chain service state
