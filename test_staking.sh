@@ -63,11 +63,11 @@ start_fork() {
     pkill -f "ganache" || true
     
     # Start Ganache with forking enabled - without redirecting output
-    ganache-cli \
+    ganache \
         --fork "$GNOSIS_RPC" \
         --fork.blockNumber latest \
-        --miner.blockTime 1 \
-        --chain.chainId 100 \
+        --blockTime 1 \
+        --chainId 100 \
         --port 8545 \
         --host 0.0.0.0 \
         --gasLimit 12000000 \
