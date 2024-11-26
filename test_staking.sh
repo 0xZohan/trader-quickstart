@@ -4,8 +4,8 @@
 GNOSIS_RPC="https://rpc.gnosischain.com"
 FORK_RPC="http://localhost:8545"
 TEST_STORE=".trader_runner_test"
-OLAS_TOKEN="0x229b1b6C23ff8953D663C4cBB519717e323a0a84"  # OLAS token on Gnosis
-STAKING_CONTRACT="0x0b4e239FF21D88a28Bb605D0cF33828361aB6E53"  # Example staking contract
+OLAS_TOKEN="0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f"  # OLAS token on Gnosis
+STAKING_CONTRACT="0x5344B7DD311e5d3DdDd46A4f71481bD7b05AAA3e"  # Example staking contract
 MINT_AMOUNT="1000000000000000000000"  # 1000 OLAS
 
 # Create test directory structure
@@ -27,7 +27,7 @@ setup_test_environment() {
         echo "$FORK_RPC" > "$TEST_STORE/rpc.txt"
         
         # Update .env file to point to test staking program
-        echo "STAKING_PROGRAM=quickstart_beta_expert_4" >> "$TEST_STORE/.env"
+        echo "STAKING_PROGRAM=quickstart_beta_expert" >> "$TEST_STORE/.env"
         echo "USE_STAKING=true" >> "$TEST_STORE/.env"
         echo "CUSTOM_STAKING_ADDRESS=$STAKING_CONTRACT" >> "$TEST_STORE/.env"
         echo "CUSTOM_OLAS_ADDRESS=$OLAS_TOKEN" >> "$TEST_STORE/.env"
