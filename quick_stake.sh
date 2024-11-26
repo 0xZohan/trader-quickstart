@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Initialize variables
 store=".trader_runner"
 env_file_path="$store/.env"
 rpc_path="$store/rpc.txt"
@@ -10,85 +9,31 @@ service_id_path="$store/service_id.txt"
 # Set up Python command
 if command -v python3 >/dev/null 2>&1; then
     PYTHON_CMD="python3"
-elif command -v python >/dev/null 2>&1; then
+else
     PYTHON_CMD="python"
-else
-    echo >&2 "Python is not installed!"
-    exit 1
 fi
 
-echo ""
-echo "-----------------"
-echo " Quick Staker"
-echo "-----------------"
-echo ""
-
-# Check if .trader_runner exists
-if [ ! -d "$store" ]; then
-    echo "Error: $store directory not found. Please run run_service.sh first to set up the environment."
-    exit 1
-fi
-
-# Load environment variables
-if [ -f "$env_file_path" ]; then
-    set -o allexport
-    source "$env_file_path"
-    set +o allexport
-else
-    echo "Error: Environment file not found at $env_file_path"
-    exit 1
-fi
-
-# Load RPC
-if [ -f "$rpc_path" ]; then
-    rpc=$(cat "$rpc_path")
-else
-    echo "Error: RPC file not found at $rpc_path"
-    exit 1
-fi
-
-# Load service ID
-if [ -f "$service_id_path" ]; then
-    service_id=$(cat "$service_id_path")
-else
-    echo "Error: Service ID file not found at $service_id_path"
-    exit 1
-fi
+# Verify store exists and load files
+[ ! -d "$store" ] && echo "Error: $store directory not found. Run run_service.sh first." && exit 1
+[ -f "$env_file_path" ] && source "$env_file_path" || { echo "Error: Environment file not found"; exit 1; }
+[ -f "$rpc_path" ] && rpc=$(cat "$rpc_path") || { echo "Error: RPC file not found"; exit 1; }
+[ -f "$service_id_path" ] && service_id=$(cat "$service_id_path") || { echo "Error: Service ID file not found"; exit 1; }
 
 # Export necessary environment variables
 export CUSTOM_CHAIN_RPC="$rpc"
+export CUSTOM_CHAIN_ID=100
 export ON_CHAIN_SERVICE_ID="$service_id"
+export RPC_RETRIES=40
+export RPC_TIMEOUT_SECONDS=120
 
-echo "Attempting to stake service $service_id..."
-echo "Using RPC: $rpc"
-echo ""
+# Check service state
+service_state=$(cd trader && poetry run autonomy service --use-custom-chain info "$service_id" | \
+    awk '/Service State/ {sub(/\|[ \t]*Service State[ \t]*\|[ \t]*/, ""); sub(/[ \t]*\|[ \t]*/, ""); print}')
 
-# Optional debug statements
-echo "CUSTOM_SERVICE_REGISTRY_ADDRESS is $CUSTOM_SERVICE_REGISTRY_ADDRESS"
-echo "CUSTOM_STAKING_ADDRESS is $CUSTOM_STAKING_ADDRESS"
-echo ""
+[ "$service_state" != "DEPLOYED" ] && echo "Service $service_id not in DEPLOYED state. Current state: $service_state" && exit 1
 
-# Change directory to 'trader' before running poetry commands
-cd trader
-
-# Function to retrieve on-chain service state
-get_on_chain_service_state() {
-    local service_id="$1"
-    local service_info=$(poetry run autonomy service --use-custom-chain info "$service_id")
-    local state="$(echo "$service_info" | awk '/Service State/ {sub(/\|[ \t]*Service State[ \t]*\|[ \t]*/, ""); sub(/[ \t]*\|[ \t]*/, ""); print}')"
-    echo "$state"
-}
-
-# Ensure service is in DEPLOYED state
-service_state="$(get_on_chain_service_state "$service_id")"
-if [ "$service_state" != "DEPLOYED" ]; then
-    echo "Service $service_id is not in DEPLOYED state. Cannot stake."
-    echo "Current service state: $service_state"
-    exit 1
-fi
-
-# Attempt staking by passing an empty string as the unstake argument
-poetry run python "../scripts/staking.py" \
+# Attempt staking
+cd trader && poetry run python "../scripts/staking.py" \
     "$service_id" \
     "$CUSTOM_SERVICE_REGISTRY_ADDRESS" \
     "$CUSTOM_STAKING_ADDRESS" \
@@ -96,12 +41,4 @@ poetry run python "../scripts/staking.py" \
     "$rpc" \
     ""
 
-result=$?
-
-if [ $result -eq 0 ]; then
-    echo "Staking operation completed for service $service_id"
-    exit 0
-else
-    echo "Staking operation failed for service $service_id"
-    exit 1
-fi
+[ $? -eq 0 ] && echo "Staking successful for service $service_id" || { echo "Staking failed for service $service_id"; exit 1; }
