@@ -17,22 +17,30 @@ export PATH="/root/.local/bin:$PATH"  # Add Poetry to path
 # 3. Install Node.js packages
 npm install -g ganache-cli web3
 
-# 4. Clone the repository and set up
-git clone https://github.com/your-fork/trader.git  # Replace with your fork
-cd trader
+# 4. Get the subgraph API key from existing .trader_runner
+if [ -f ".trader_runner/.env" ]; then
+    SUBGRAPH_API_KEY=$(grep SUBGRAPH_API_KEY .trader_runner/.env | cut -d '=' -f2)
+    echo "Found existing SUBGRAPH_API_KEY: $SUBGRAPH_API_KEY"
+else
+    echo "Error: No .trader_runner/.env found with SUBGRAPH_API_KEY"
+    exit 1
+fi
 
-# 5. Install Python dependencies
+# 5. Clone and set up trader repository (required by run_service.sh)
+git clone https://github.com/valory-xyz/trader.git
+cd trader
 poetry install
 poetry run autonomy packages sync
 poetry run autonomy init --reset --author valory --remote --ipfs --ipfs-node "/dns/registry.autonolas.tech/tcp/443/https"
 poetry add tqdm cryptography==42.0.8
+cd ..
 
 # 6. Set non-interactive mode
 export ATTENDED=false
 export GNOSIS_CHAIN_RPC="https://rpc.gnosischain.com"
-export SUBGRAPH_API_KEY="YOUR_SUBGRAPH_API_KEY"  # Replace this
+export SUBGRAPH_API_KEY="$SUBGRAPH_API_KEY"
 
-# 7. Run the service to set up .trader_runner
+# 7. Run the service to ensure everything is set up
 ./run_service.sh --attended=false
 
 # 8. Stop all docker containers
