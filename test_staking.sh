@@ -54,14 +54,15 @@ setup_test_environment() {
     fi
 }
 
-# Start local Ganache fork
+# Start local Ganache fork with verbose output
 start_fork() {
     echo "Starting Ganache fork of Gnosis Chain..."
+    echo "Using RPC: $GNOSIS_RPC"
     
     # Kill any existing Ganache instance
-    pkill -f "ganache"
+    pkill -f "ganache" || true
     
-    # Start Ganache with forking enabled
+    # Start Ganache with forking enabled - without redirecting output
     ganache-cli \
         --fork "$GNOSIS_RPC" \
         --fork.blockNumber latest \
@@ -72,8 +73,7 @@ start_fork() {
         --gasLimit 12000000 \
         --unlock "$OLAS_TOKEN" \
         --deterministic \
-        --account="0x$(cat $TEST_STORE/operator_pkey.txt),100000000000000000000" \
-        > ganache.log 2>&1 &
+        --account="0x$(cat $TEST_STORE/operator_pkey.txt),100000000000000000000"
     
     # Wait for Ganache to start
     sleep 5
