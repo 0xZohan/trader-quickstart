@@ -1,12 +1,20 @@
 #!/bin/bash
 
+# Get RPC from existing configuration
+if [ ! -f ".trader_runner/rpc.txt" ]; then
+    echo "Error: RPC configuration not found in .trader_runner/rpc.txt"
+    exit 1
+fi
+
 # Initialize variables
-GNOSIS_RPC="https://rpc.gnosischain.com"
+GNOSIS_RPC=$(cat .trader_runner/rpc.txt)
 FORK_RPC="http://localhost:8545"
 TEST_STORE=".trader_runner_test"
 OLAS_TOKEN="0xcE11e14225575945b8E6Dc0D4F2dD4C570f79d9f"  # OLAS token on Gnosis
 STAKING_CONTRACT="0x5344B7DD311e5d3DdDd46A4f71481bD7b05AAA3e"  # Example staking contract
 MINT_AMOUNT="1000000000000000000000"  # 1000 OLAS
+
+echo "Using RPC from configuration: $GNOSIS_RPC"
 
 # Create test directory structure
 setup_test_environment() {
