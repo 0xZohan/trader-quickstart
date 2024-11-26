@@ -15,35 +15,6 @@ service_id_path="$store/service_id.txt"
 use_password=false
 password_argument=""
 
-# Function to export dotenv variables
-export_dotenv() {
-    local dotenv_path="$1"
-    unamestr=$(uname)
-    # Mac
-    if [ "$unamestr" = 'FreeBSD' ] || [ "$unamestr" = 'Darwin' ]; then
-        export $(grep -v '^#' $dotenv_path | xargs -0)
-    # Linux, WSL, MinGW
-    else
-        export $(grep -v '^#' $dotenv_path | xargs -d '\n')
-    fi
-}
-
-
-# Get the private key from a keys.json file
-get_private_key() {
-    local keys_json_path="$1"
-
-    if [ ! -f "$keys_json_path" ]; then
-        echo "Error: $keys_json_path does not exist."
-        return 1
-    fi
-
-    private_key=$($PYTHON_CMD -c 'import json; print(json.load(open("'"$keys_json_path"'"))[0]["private_key"])')
-    private_key="${private_key#0x}"
-
-    echo -n "$private_key"
-}
-
 # Set up Python command
 if command -v python3 >/dev/null 2>&1; then
     PYTHON_CMD="python3"
@@ -68,8 +39,9 @@ fi
 
 # Load environment variables
 if [ -f "$env_file_path" ]; then
+    set -o allexport
     source "$env_file_path"
-    export_dotenv "$env_file_path"
+    set +o allexport
 else
     echo "Error: Environment file not found at $env_file_path"
     exit 1
@@ -97,6 +69,11 @@ export ON_CHAIN_SERVICE_ID="$service_id"
 
 echo "Attempting to stake service $service_id..."
 echo "Using RPC: $rpc"
+echo ""
+
+# Debug statements to check environment variables
+echo "CUSTOM_SERVICE_REGISTRY_ADDRESS is $CUSTOM_SERVICE_REGISTRY_ADDRESS"
+echo "CUSTOM_STAKING_ADDRESS is $CUSTOM_STAKING_ADDRESS"
 echo ""
 
 cd trader
