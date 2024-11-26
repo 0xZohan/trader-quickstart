@@ -62,7 +62,7 @@ start_fork() {
     # Kill any existing Ganache instance
     pkill -f "ganache" || true
     
-    # Start Ganache with forking enabled
+    # Start Ganache with updated options
     ganache \
         --fork.url "$GNOSIS_RPC" \
         --fork.blockNumber "latest" \
@@ -70,7 +70,7 @@ start_fork() {
         --chain.chainId 100 \
         --server.port 8545 \
         --server.host "0.0.0.0" \
-        --miner.defaultGasLimit 12000000 \
+        --miner.blockGasLimit 12000000 \
         --wallet.unlockedAccounts "$OLAS_TOKEN" \
         --wallet.deterministic \
         --wallet.accounts="0x$(cat $TEST_STORE/operator_pkey.txt),100000000000000000000"
@@ -88,6 +88,7 @@ start_fork() {
     
     echo "Ganache fork running at $FORK_RPC"
 }
+
 
 
 # Setup test tokens
