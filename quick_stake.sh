@@ -1,19 +1,11 @@
 #!/bin/bash
 
-# Initialize repo and version variables
+# Initialize variables
 store=".trader_runner"
-path_to_store="$PWD/$store/"
 env_file_path="$store/.env"
 rpc_path="$store/rpc.txt"
-operator_keys_file="$store/operator_keys.json"
 operator_pkey_path="$store/operator_pkey.txt"
-keys_json="keys.json"
-keys_json_path="$store/$keys_json"
-agent_pkey_path="$store/agent_pkey.txt"
-agent_address_path="$store/agent_address.txt"
 service_id_path="$store/service_id.txt"
-use_password=false
-password_argument=""
 
 # Set up Python command
 if command -v python3 >/dev/null 2>&1; then
@@ -32,7 +24,7 @@ echo "-----------------"
 echo ""
 
 # Check if .trader_runner exists
-if [ ! -d $store ]; then
+if [ ! -d "$store" ]; then
     echo "Error: $store directory not found. Please run run_service.sh first to set up the environment."
     exit 1
 fi
@@ -49,7 +41,7 @@ fi
 
 # Load RPC
 if [ -f "$rpc_path" ]; then
-    rpc=$(cat $rpc_path)
+    rpc=$(cat "$rpc_path")
 else
     echo "Error: RPC file not found at $rpc_path"
     exit 1
@@ -57,7 +49,7 @@ fi
 
 # Load service ID
 if [ -f "$service_id_path" ]; then
-    service_id=$(cat $service_id_path)
+    service_id=$(cat "$service_id_path")
 else
     echo "Error: Service ID file not found at $service_id_path"
     exit 1
@@ -71,21 +63,21 @@ echo "Attempting to stake service $service_id..."
 echo "Using RPC: $rpc"
 echo ""
 
-# Debug statements to check environment variables
+# Optional debug statements (you can remove these if not needed)
 echo "CUSTOM_SERVICE_REGISTRY_ADDRESS is $CUSTOM_SERVICE_REGISTRY_ADDRESS"
 echo "CUSTOM_STAKING_ADDRESS is $CUSTOM_STAKING_ADDRESS"
 echo ""
 
 cd trader
 
-# Attempt staking
+# Attempt staking by passing an empty string as the unstake argument
 poetry run python "../scripts/staking.py" \
     "$service_id" \
     "$CUSTOM_SERVICE_REGISTRY_ADDRESS" \
     "$CUSTOM_STAKING_ADDRESS" \
     "../$operator_pkey_path" \
     "$rpc" \
-    "false"
+    ""
 
 result=$?
 
