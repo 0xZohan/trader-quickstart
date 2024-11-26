@@ -62,30 +62,33 @@ start_fork() {
     # Kill any existing Ganache instance
     pkill -f "ganache" || true
     
-    # Start Ganache with forking enabled - without redirecting output
+    # Start Ganache with forking enabled
     ganache \
-        --fork "$GNOSIS_RPC" \
-        --fork.blockNumber latest \
-        --blockTime 1 \
-        --chainId 100 \
-        --port 8545 \
-        --host 0.0.0.0 \
-        --gasLimit 12000000 \
-        --unlock "$OLAS_TOKEN" \
-        --deterministic \
-        --account="0x$(cat $TEST_STORE/operator_pkey.txt),100000000000000000000"
+        --fork.url "$GNOSIS_RPC" \
+        --fork.blockNumber "latest" \
+        --miner.blockTime 1 \
+        --chain.chainId 100 \
+        --server.port 8545 \
+        --server.host "0.0.0.0" \
+        --miner.defaultGasLimit 12000000 \
+        --wallet.unlockedAccounts "$OLAS_TOKEN" \
+        --wallet.deterministic \
+        --wallet.accounts="0x$(cat $TEST_STORE/operator_pkey.txt),100000000000000000000"
     
     # Wait for Ganache to start
     sleep 5
     
     # Check if Ganache is running
-    if ! curl -s -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' "$FORK_RPC" > /dev/null; then
+    if ! curl -s -X POST -H "Content-Type: application/json" \
+        --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+        "$FORK_RPC" > /dev/null; then
         echo "Error: Failed to start Ganache fork"
         exit 1
     fi
     
     echo "Ganache fork running at $FORK_RPC"
 }
+
 
 # Setup test tokens
 setup_test_tokens() {
@@ -146,19 +149,19 @@ test_quick_stake() {
     return $result
 }
 
-# Install dependencies
 install_dependencies() {
     echo "Installing dependencies..."
     
-    # Check if ganache-cli is installed
-    if ! command -v ganache-cli &> /dev/null; then
-        echo "Installing ganache-cli..."
-        npm install -g ganache-cli
+    # Check if ganache is installed
+    if ! command -v ganache &> /dev/null; then
+        echo "Installing ganache..."
+        npm install -g ganache
     fi
     
     # Install web3 for token minting
     npm install web3
 }
+
 
 # Main test flow
 main() {
