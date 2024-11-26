@@ -58,11 +58,11 @@ setup_test_environment() {
 start_fork() {
     echo "Starting Ganache fork of Gnosis Chain..."
     echo "Using RPC: $GNOSIS_RPC"
-    
+
     # Kill any existing Ganache instance
     pkill -f "ganache" || true
-    
-    # Start Ganache with updated options
+
+    # Start Ganache with forking enabled - run in background
     ganache \
         --fork.url "$GNOSIS_RPC" \
         --fork.blockNumber "latest" \
@@ -73,11 +73,12 @@ start_fork() {
         --miner.blockGasLimit 12000000 \
         --wallet.unlockedAccounts "$OLAS_TOKEN" \
         --wallet.deterministic \
-        --wallet.accounts="0x$(cat $TEST_STORE/operator_pkey.txt),100000000000000000000"
-    
+        --wallet.accounts="0x$(cat $TEST_STORE/operator_pkey.txt),100000000000000000000" \
+        > ganache.log 2>&1 &
+
     # Wait for Ganache to start
     sleep 5
-    
+
     # Check if Ganache is running
     if ! curl -s -X POST -H "Content-Type: application/json" \
         --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
@@ -85,9 +86,10 @@ start_fork() {
         echo "Error: Failed to start Ganache fork"
         exit 1
     fi
-    
+
     echo "Ganache fork running at $FORK_RPC"
 }
+
 
 
 
