@@ -63,10 +63,26 @@ echo "Attempting to stake service $service_id..."
 echo "Using RPC: $rpc"
 echo ""
 
-# Optional debug statements (you can remove these if not needed)
+# Optional debug statements
 echo "CUSTOM_SERVICE_REGISTRY_ADDRESS is $CUSTOM_SERVICE_REGISTRY_ADDRESS"
 echo "CUSTOM_STAKING_ADDRESS is $CUSTOM_STAKING_ADDRESS"
 echo ""
+
+# Function to retrieve on-chain service state
+get_on_chain_service_state() {
+    local service_id="$1"
+    local service_info=$(poetry run autonomy service --use-custom-chain info "$service_id")
+    local state="$(echo "$service_info" | awk '/Service State/ {sub(/\|[ \t]*Service State[ \t]*\|[ \t]*/, ""); sub(/[ \t]*\|[ \t]*/, ""); print}')"
+    echo "$state"
+}
+
+# Ensure service is in DEPLOYED state
+service_state="$(get_on_chain_service_state "$service_id")"
+if [ "$service_state" != "DEPLOYED" ]; then
+    echo "Service $service_id is not in DEPLOYED state. Cannot stake."
+    echo "Current service state: $service_state"
+    exit 1
+fi
 
 cd trader
 
