@@ -68,6 +68,9 @@ echo "CUSTOM_SERVICE_REGISTRY_ADDRESS is $CUSTOM_SERVICE_REGISTRY_ADDRESS"
 echo "CUSTOM_STAKING_ADDRESS is $CUSTOM_STAKING_ADDRESS"
 echo ""
 
+# Change directory to 'trader' before running poetry commands
+cd trader
+
 # Function to retrieve on-chain service state
 get_on_chain_service_state() {
     local service_id="$1"
@@ -83,8 +86,6 @@ if [ "$service_state" != "DEPLOYED" ]; then
     echo "Current service state: $service_state"
     exit 1
 fi
-
-cd trader
 
 # Attempt staking by passing an empty string as the unstake argument
 poetry run python "../scripts/staking.py" \
