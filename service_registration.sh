@@ -1175,3 +1175,39 @@ if [ "$service_state" != "DEPLOYED" ]; then
     echo "Terminating script."
     exit 1
 fi
+
+# ensure Safe owner is agent
+# (This may occur if update flow was interrupted)
+if [[ -f "../$service_safe_address_path" ]]; then
+    service_safe_address=$(<"../$service_safe_address_path")
+    current_safe_owners=$(poetry run python "../scripts/get_safe_owners.py" "$service_safe_address" "../$agent_pkey_path" "$rpc" $password_argument | awk '{gsub(/"/, "\047", $0); print $0}')
+    if [[ "$current_safe_owners" == "['$operator_address']" ]]; then
+        echo "[Operator] Swapping Safe owner..."
+        poetry run python "../scripts/swap_safe_owner.py" "$service_safe_address" "../$operator_pkey_path" "$agent_address" "$rpc" $password_argument
+    fi
+fi
+
+
+echo ""
+echo "Finished checking Autonolas Protocol service $service_id state."
+
+check_for_policy_update
+
+echo ""
+echo "------------------------------"
+echo "Starting the trader service..."
+echo "------------------------------"
+echo ""
+
+# Get the deployed service's Safe address from the contract
+service_info=$(poetry run autonomy service --use-custom-chain info "$service_id")
+safe=$(echo "$service_info" | grep "Multisig Address")
+address_start_position=31
+safe=$(echo "$safe" |
+  awk '{ print substr( $0, '$address_start_position', length($0) - '$address_start_position' - 3 ) }')
+export SAFE_CONTRACT_ADDRESS=$safe
+echo -n "$safe" > "../$service_safe_address_path"
+
+echo "Your agent instance's address: $agent_address"
+echo "Your service's Safe address: $safe"
+echo ""
